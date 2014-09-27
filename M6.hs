@@ -134,7 +134,8 @@ hitDamage Stats{..} Hit{..} = base * dex * crit * elem * sentry * skill * ctw * 
                                          Rocket  -> rocketMul
                                          Grenade -> grenadeMul
         dex    = 1 + fromIntegral dexterity/100
-        crit   = (1 - critChance) + critChance * critDamage
+        -- Weighted average of non-crit and crit
+        crit   = (1 - critChance) + (critChance * critDamage)
         elem   = petDmg' + case hitElem of
                              Cold      -> coldMul
                              Fire      -> fireMul
