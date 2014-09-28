@@ -102,8 +102,8 @@ skillHits skill = map ($ skill) $ hits skill
     FA -> [ Hit 3.30 Cold      (HitSplit 10) Instant Normal ]
     IA -> [ simple 3.00 Fire, Hit 3.15 Fire (HitRadius 10) (DoT 2) Normal ]
     LB -> [ simple 3.00 Lightning ]
-    -- I'm not sure if these are actually 10 yards, but it looks like BL
-    NT -> [ Hit 3.00 Physical (HitLine 10) Instant Normal ]
+    -- No idea about what this range actually is
+    NT -> [ Hit 3.00 Physical (HitLine 3) Instant Normal ]
 
   hits (Chakram r) = case r of
     TC -> replicate 2 $ Hit 2.20 Fire (HitPath TC) Instant Normal
