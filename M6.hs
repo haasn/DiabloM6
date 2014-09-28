@@ -62,6 +62,7 @@ data Hit = Hit
   , hitSkill   :: Skill
   }
 
+-- TODO: Consider abilities with differing ranges?
 data TargetCap = NoCap   | Cap Integer deriving Show
 data HitLength = Instant | DoT Time    deriving Show
 data HitType   = Normal  | Rocket | Grenade deriving Show
@@ -102,12 +103,17 @@ skillHits skill = map ($ skill) $ hits skill
            , Hit 3.00 Fire      (Cap 3) Instant Rocket ]
 
   hits (Cluster r) = case r of
-    DA  ->   simple 5.50 Lightning : grenades Lightning
-    SS  -> [ simple 5.50 Physical, Hit 6.00 Physical (Cap 3) Instant Rocket ]
-    M   -> [ simple 5.50 Cold    , Hit 4.50 Cold     (Cap 5) Instant Rocket ]
-    LfB ->   simple 7.70 Fire : grenades Fire
+    DA  ->   Hit 5.50 Lightning NoCap   Instant Normal : grenades Lightning
+    SS  -> [ Hit 5.50 Physical  NoCap   Instant Normal
+           , Hit 6.00 Physical  (Cap 3) Instant Rocket ]
+    M   -> [ Hit 5.50 Cold      NoCap   Instant Normal
+           , Hit 4.50 Cold      (Cap 5) Instant Rocket ]
+    LfB ->   Hit 7.70 Fire      NoCap   Instant Normal : grenades Fire
     -- How many targets hit per grenade?
     CB  -> error "Not implemented: Cluster Bomb"
+    -- Note: This assumes every grenade hits the target, which doesn't seem to
+    -- be guaranteed. It's probably best to ignore the non-rocket runes for now
+    -- to be on the safe side.
     where grenades e = replicate 4 $ Hit 2.20 e NoCap Instant Grenade
 
   hits (Impale r) = case r of
