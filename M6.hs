@@ -69,7 +69,7 @@ data Hit = Hit
 -- | Types of hit patterns
 data HitPattern
   -- | Abilities that hit a guaranteed number of targets, like homing rockets
-  -- or normal targeted abilities (the same target can't be hit twice)
+  --   or normal targeted abilities (the same target can't be hit twice)
   = HitExact Count
   -- | Abilities that hit any number of targets within a given radius
   | HitRadius Distance
@@ -79,7 +79,7 @@ data HitPattern
   -- | Abilities that hit everything (like Multishot)
   | HitEverything
   -- | Abilities that pierce or split up to hit additional enemies behind the
-  -- initial target
+  --   initial target
   | HitSplit Count
   -- | Abilities that ricochet to a number of targets within a given radius
   | HitRicochet Count Distance
