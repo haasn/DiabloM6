@@ -191,13 +191,13 @@ data TargetModel
   | Radius Distance -- ^ Spread evenly out evenly within a radius
   | Line   Distance -- ^ Standing in a perfect line of given length
 
-type Enemies = [(Count, TargetModel)]
+type Enemies = (Count, TargetModel)
 
 singleBoss :: Enemies
-singleBoss = [(1, Clumped)]
+singleBoss = (1, Clumped)
 
 -- | Calculate how many targets will be hit on average for a given combination
-intersect :: Count -> TargetModel -> HitPattern -> Count
+intersect :: Count -> TargetModel -> HitPattern -> Multiplier
 intersect n _ (HitExact m)  = min n m
 intersect n _ HitEverything = n
 
@@ -253,14 +253,11 @@ computeHits = clipDots . concatMap (traverse skillHits)
                       -- made for DoTs clipping.
 
 computeDamage :: Stats -> Enemies -> Timeline Hit -> Timeline Damage
-computeDamage stats targets = map (fmap simulate)
+computeDamage stats (n,tm) = map (fmap simulate)
   where simulate :: Hit -> Damage
-        simulate h = hitDamage stats h * sum [ targetCount n m h
-                                             | (n,m) <- targets ]
-
-        targetCount :: Count -> TargetModel -> Hit -> Count
-        targetCount n m h =
-          intersect n m (hitPattern h)
+        simulate h =
+            hitDamage stats h               -- Base damage being dealt
+            * intersect n tm (hitPattern h) -- Multiplier due to target types
             * case hitType h of
                 -- All of these effects are pretty random, so let's just
                 -- assume only about half of them hit. This probably needs
