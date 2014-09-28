@@ -60,78 +60,92 @@ data SenRune   = ST  | IB  | CoT | PS | GT  deriving (Show, Eq, Ord, Enum)
 data Hit = Hit
   { hitMult    :: Multiplier
   , hitElem    :: Element
-  , hitTargets :: TargetCap
+  , hitPattern :: HitPattern
   , hitLength  :: HitLength
   , hitType    :: HitType
   , hitSkill   :: Skill
   }
 
--- TODO: Consider abilities with differing ranges?
-data TargetCap = NoCap   | Cap Integer deriving Show
-data HitLength = Instant | DoT Time    deriving Show
+-- | Types of hit patterns
+data HitPattern
+  -- | Abilities that hit a guaranteed number of targets, like homing rockets
+  -- or normal targeted abilities (the same target can't be hit twice)
+  = HitExact Count
+  -- | Abilities that hit any number of targets within a given radius
+  | HitRadius Distance
+  -- | Abilities that travel in a straight line and hit anything they touch,
+  --   within a radius
+  | HitLine Distance
+  -- | Abilities that hit everything (like Multishot)
+  | HitEverything
+  -- | Abilities that pierce or split up to hit additional enemies behind the
+  -- initial target
+  | HitSplit Count
+  -- | Abilities that ricochet to a number of targets within a given radius
+  | HitRicochet Count Distance
+  -- | Chakrams that follow a fixed path
+  | HitPath ChakRune
+  deriving Show
+
+data HitLength = Instant | DoT Time         deriving Show
 data HitType   = Normal  | Rocket | Grenade deriving Show
 
-single :: TargetCap
-single = Cap 1
-
 simple :: Multiplier -> Element -> Skill -> Hit
-simple m e = Hit m e single Instant Normal
+simple m e = Hit m e (HitExact 1) Instant Normal
 
 -- Base skill hit types and coefficients
 skillHits :: Skill -> [Hit]
 skillHits skill = map ($ skill) $ hits skill
  where
   hits (Elemental r) = case r of
-    IA -> [ simple 3.00 Fire, Hit 3.15 Fire NoCap (DoT 2) Normal ]
+    BL -> [ Hit 3.00 Lightning (HitLine  10) Instant Normal ]
+    FA -> [ Hit 3.30 Cold      (HitSplit 10) Instant Normal ]
+    IA -> [ simple 3.00 Fire, Hit 3.15 Fire (HitRadius 10) (DoT 2) Normal ]
     LB -> [ simple 3.00 Lightning ]
-    NT -> [ Hit 3.00 Physical NoCap Instant Normal ]
-    -- Splits up to hit 11 targets. This may be too idealistic
-    FA -> [ Hit 3.30 Cold (Cap 11) Instant Normal ]
-    -- How often does it tick per target?
-    BL -> error "Not implemented: Ball Lightning"
+    -- I'm not sure if these are actually 10 yards, but it looks like BL
+    NT -> [ Hit 3.00 Physical (HitLine 10) Instant Normal ]
 
   hits (Chakram r) = case r of
-    TC -> replicate 2 $ Hit 2.20 Fire NoCap Instant Normal
-    S  -> [ Hit 5.00 Poison    NoCap Instant Normal ]
-    RD -> [ Hit 3.80 Physical  NoCap Instant Normal ]
-    B  -> [ Hit 4.00 Lightning NoCap Instant Normal ]
-    SC -> [ Hit 2.00 Physical  NoCap (DoT 1) Normal ]
+    TC -> replicate 2 $ Hit 2.20 Fire (HitPath TC) Instant Normal
+    S  -> [ Hit 5.00 Poison    (HitLine 10)    Instant Normal ] -- Estimate
+    RD -> [ Hit 3.80 Physical  (HitPath RD)   Instant Normal ]
+    B  -> [ Hit 4.00 Lightning (HitPath B)    Instant Normal ]
+    SC -> [ Hit 2.00 Physical  (HitRadius 10) (DoT 1) Normal ]
 
   hits (Multishot r) = case r of
-    FaW -> [ Hit 3.60 Lightning NoCap   Instant Normal ]
-    BF  -> [ Hit 3.60 Cold      NoCap   Instant Normal
-           , Hit 2.00 Cold      NoCap   Instant Normal ]
-    SF  -> [ Hit 3.60 Physical  NoCap   Instant Normal ]
-    FB  -> [ Hit 4.60 Physical  NoCap   Instant Normal ]
-    A   -> [ Hit 3.60 Fire      NoCap   Instant Normal
-           , Hit 3.00 Fire      (Cap 3) Instant Rocket ]
+    FaW -> [ Hit 3.60 Lightning HitEverything  Instant Normal ]
+    BF  -> [ Hit 3.60 Cold      HitEverything  Instant Normal
+           , Hit 2.00 Cold      (HitRadius 15) Instant Normal ]
+    SF  -> [ Hit 3.60 Physical  HitEverything  Instant Normal ]
+    FB  -> [ Hit 4.60 Physical  HitEverything  Instant Normal ]
+    A   -> [ Hit 3.60 Fire      HitEverything  Instant Normal
+           , Hit 3.00 Fire      (HitExact 3)   Instant Rocket ]
 
   hits (Cluster r) = case r of
-    DA  ->   Hit 5.50 Lightning NoCap   Instant Normal : grenades Lightning
-    SS  -> [ Hit 5.50 Physical  NoCap   Instant Normal
-           , Hit 6.00 Physical  (Cap 3) Instant Rocket ]
-    M   -> [ Hit 5.50 Cold      NoCap   Instant Normal
-           , Hit 4.50 Cold      (Cap 5) Instant Rocket ]
-    LfB ->   Hit 7.70 Fire      NoCap   Instant Normal : grenades Fire
-    -- How many targets hit per grenade?
-    CB  -> error "Not implemented: Cluster Bomb"
-    -- Note: This assumes every grenade hits the target, which doesn't seem to
-    -- be guaranteed. It's probably best to ignore the non-rocket runes for now
-    -- to be on the safe side.
-    where grenades e = replicate 4 $ Hit 2.20 e NoCap Instant Grenade
+    DA  ->   Hit 5.50 Lightning (HitRadius 10) Instant Normal : grenades Lightning
+    SS  -> [ Hit 5.50 Physical  (HitRadius 10) Instant Normal
+           , Hit 6.00 Physical  (HitExact 3)   Instant Rocket ]
+    M   -> [ Hit 5.50 Cold      (HitRadius 10) Instant Normal
+           , Hit 4.50 Cold      (HitExact 5)   Instant Rocket ]
+    CB  -> [ Hit 5.25 Fire      (HitRadius 10) Instant Normal
+           , Hit 5.25 Fire      (HitLine 6)    Instant Grenade ]
+    LfB ->   Hit 7.70 Fire      (HitRadius 10) Instant Normal : grenades Fire
+    where grenades e = replicate 4 $ Hit 2.20 e (HitRadius 6) Instant Grenade
 
   hits (Impale r) = case r of
     I   -> [ simple 7.50 Physical ]
-    ChB -> [ simple 7.50 Fire, Hit 5.00 Fire single (DoT 2) Normal ]
-    O   -> [ Hit 7.50 Cold      NoCap   Instant Normal ]
-    R   -> [ Hit 7.50 Lightning (Cap 3) Instant Normal ]
+    ChB -> [ simple 7.50 Fire, Hit 5.00 Fire (HitExact 1) (DoT 2) Normal ]
+    O   -> [ Hit 7.50 Cold      (HitLine 5)        Instant Normal ] -- Estimate
+    R   -> [ Hit 7.50 Lightning (HitRicochet 2 20) Instant Normal ]
     -- How exactly do crits get calculated?
     GW  -> error "Not implemented: Grievous Wounds"
 
   -- Extra damage from sentry only
   hits (Sentry r) = case r of
-    ST  -> [ Hit 1.20 Fire single Instant Rocket ]
-    CoT -> [ Hit 3.00 Physical NoCap (DoT 1) Normal ]
+    ST  -> [ Hit 1.20 Fire (HitExact 1) Instant Rocket ]
+    -- To avoid headaches, let's just assume CoT hits everything since we're
+    -- math gods and can come up with the perfect patterns on the fly
+    CoT -> [ Hit 3.00 Physical HitEverything (DoT 1) Normal ]
     _   -> []
 
 
@@ -176,6 +190,11 @@ data TargetModel
   = Clumped         -- ^ The dream: Everything standing on a single spot
   | Radius Distance -- ^ Spread evenly out evenly within a radius
   | Line   Distance -- ^ Standing in a perfect line of given length
+
+type Enemies = [(Count, TargetModel)]
+
+singleBoss :: Enemies
+singleBoss = [(1, Clumped)]
 
 -- | Calculate how many targets will be hit on average for a given combination
 intersect :: Count -> TargetModel -> HitPattern -> Count
@@ -233,9 +252,11 @@ computeHits = clipDots . concatMap (traverse skillHits)
                       -- may be warranted. For now, no adjustment needs to be
                       -- made for DoTs clipping.
 
-computeDamage :: Stats -> Targets -> Timeline Hit -> Timeline Damage
-computeDamage stats = map . fmap . hitDamage stats
--- TODO: Implement dynamic buffs?
+computeDamage :: Stats -> Enemies -> Timeline Hit -> Timeline Damage
+computeDamage stats targets = map (fmap simulate)
+  where simulate :: Hit -> Damage
+        simulate h = hitDamage stats h * sum [ intersect n m (hitPattern h)
+                                             | (n,m) <- targets ]
 
 
 -- Example stats for testing
