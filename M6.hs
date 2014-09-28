@@ -255,8 +255,25 @@ computeHits = clipDots . concatMap (traverse skillHits)
 computeDamage :: Stats -> Enemies -> Timeline Hit -> Timeline Damage
 computeDamage stats targets = map (fmap simulate)
   where simulate :: Hit -> Damage
-        simulate h = hitDamage stats h * sum [ intersect n m (hitPattern h)
+        simulate h = hitDamage stats h * sum [ targetCount n m h
                                              | (n,m) <- targets ]
+
+        targetCount :: Count -> TargetModel -> Hit -> Count
+        targetCount n m h =
+          intersect n m (hitPattern h)
+            * case hitType h of
+                -- All of these effects are pretty random, so let's just
+                -- assume only about half of them hit. This probably needs
+                -- to be tuned more properly, but a quick test of LfB suggests
+                -- that only about 2 grenades ever hit their intended target.
+                Grenade -> 0.5
+                _ -> 1
+            * case hitSkill h of
+                -- Ball lightning can tick multiple times for enemies - but
+                -- it really depends on the monster size as well as the travel
+                -- speed of BL bolts, so let's just leave it open for now.
+                Elemental BL -> error "Target count for BL?"
+                _ -> 1
 
 
 -- Example stats for testing
