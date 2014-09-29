@@ -18,30 +18,30 @@ data Element = Cold | Fire | Physical | Lightning | Poison
 
 -- | A “snapshot” of gear stats and multipliers
 data Stats = Stats
-  { weaponDmg  :: Damage
-  , dexterity  :: Multiplier
-  , critChance :: Chance
-  , critDamage :: Multiplier
+  { weaponDmg  :: !Damage
+  , dexterity  :: !Multiplier
+  , critChance :: !Chance
+  , critDamage :: !Multiplier
 
   -- True skill multipliers
-  , coldMul, fireMul, physicalMul, lightningMul, poisonMul :: Multiplier
-  , eliteMul, sentryMul, rocketMul, grenadeMul, skillMul   :: Multiplier
-  , zei'sMul, trappedMul, cullMul :: Multiplier
+  , coldMul, fireMul, physicalMul, lightningMul, poisonMul :: !Multiplier
+  , eliteMul, sentryMul, rocketMul, grenadeMul, skillMul   :: !Multiplier
+  , zei'sMul, trappedMul, cullMul :: !Multiplier
 
   -- Additive extra skill bonuses
-  , elementalDmg, chakDmg, multishotDmg, clusterDmg, impDmg :: SkillBonus
+  , elementalDmg, chakDmg, multishotDmg, clusterDmg, impDmg :: !SkillBonus
 
   -- Not a true multiplier, additive with elements
-  , petDmg :: SkillBonus
+  , petDmg :: !SkillBonus
 
   -- Multiplier on BL due to tick count. Ideally this should also be a
   -- property of targets as well as travel speed, but this is an open problem
   -- for now.
-  , ballTicks :: Multiplier
+  , ballTicks :: !Multiplier
 
   -- Things related to sentry spawning
-  , sentryCD  :: Time
-  , sentryMax :: Int
+  , sentryCD  :: !Time
+  , sentryMax :: !Int
   }
   deriving Show
 
@@ -67,12 +67,12 @@ data SenRune   = ST  | IB  | CoT | PS | GT  deriving (Show, Eq, Ord, Enum)
 
 -- Encapsulated data for a type of skill hit effect
 data Hit = Hit
-  { hitMult    :: Multiplier
-  , hitElem    :: Element
-  , hitPattern :: HitPattern
-  , hitLength  :: HitLength
-  , hitType    :: HitType
-  , hitSkill   :: Skill
+  { hitMult    :: !Multiplier
+  , hitElem    :: !Element
+  , hitPattern :: !HitPattern
+  , hitLength  :: !HitLength
+  , hitType    :: !HitType
+  , hitSkill   :: !Skill
   }
 
 -- | Types of hit patterns
