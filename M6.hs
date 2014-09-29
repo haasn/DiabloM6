@@ -41,9 +41,11 @@ data Stats = Stats
   -- for now.
   , ballTicks :: !Multiplier
 
-  -- Things related to sentry spawning
-  , sentryCD  :: !Time
-  , sentryMax :: !Int
+  -- Things related to sentries
+  , sentryCD     :: !Time
+  , sentryMax    :: !Int
+  , sentrySpeed  :: !Frames
+  , sentrySkills :: !Skills
   }
   deriving Show
 
@@ -318,6 +320,34 @@ normalize d = go 0
   where go _ [] = []
         go t td = let (l,r) = split (t+d) td in (t, summarize l) : go (t+d) r
 
+
+
+-- Simulation of sentry rotations and cooldowns
+
+type Skills = [(Skill, Frames)]
+
+-- | Rotate through a set of abilities at a given delay to produce a rotation
+rotate :: Frames -> Skills -> Timeline Skill
+rotate d skills = map (\(f,s) -> (fromIntegral f/60, s)) $ go 0 initial
+  where go t ss = let (s,ss') = pick t ss in (t,s) : go (t+d) ss'
+        -- Everything is ready initially
+        initial = [ (s,cd,0) | (s,cd) <- skills ]
+
+        -- No ability is ready
+        pick t [] = error "Not implemented: Non-spender bolts"
+        pick t (a@(s,cd,n):ss)
+          -- An ability is ready, use it immediately; increment its cooldown
+          -- time and leave other abilities unchanged
+          | t >= n = (s, (s,cd,t+cd) : ss)
+          -- An ability is on cooldown, keep looking
+          | otherwise = fmap (a:) $ pick t ss
+
+-- Example rotation based on frostfire at 2.84
+frostfire :: Skills
+frostfire = [(Cluster M, 144), (Multishot A, 54), (Elemental FA, 0)]
+
+
+
 -- Example stats for testing
 
 stats :: Stats
@@ -348,4 +378,6 @@ stats = Stats
   , ballTicks = 8
   , sentryCD = 6
   , sentryMax = 4
+  , sentrySkills = frostfire
+  , sentrySpeed = 12
   }
