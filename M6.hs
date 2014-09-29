@@ -42,10 +42,11 @@ data Stats = Stats
   , ballTicks :: !Multiplier
 
   -- Things related to sentries
-  , sentryCD     :: !Time
-  , sentryMax    :: !Int
-  , sentrySpeed  :: !Frames
-  , sentrySkills :: !Skills
+  , sentryCD     :: !Time   -- ^ Cooldown on the Sentry ability
+  , sentryMax    :: !Int    -- ^ Maximum number of sentries
+  , sentryLife   :: !Frames -- ^ How many frames the sentry is available for
+  , sentrySpeed  :: !Frames -- ^ Frames per sentry attack animation
+  , sentrySkills :: !Skills -- ^ Sentry's configured skillset
   }
   deriving Show
 
@@ -329,8 +330,8 @@ type Skills = [(Skill, Frames)]
 -- | Rotate through a set of abilities at a given delay to produce a rotation
 rotate :: Frames -> Skills -> Timeline Skill
 rotate d skills = go 0 initial
-  where go t ss = let (s,ss') = pick t ss
-                  in  (fromIntegral t/60,s) : go (t+d) ss'
+  where go f ss = let (s,ss') = pick f ss
+                  in  (fromIntegral f/60,s) : go (f+d) ss'
         -- Everything is ready initially
         initial = [ (s,cd,0) | (s,cd) <- skills ]
                     -- No ability is ready
