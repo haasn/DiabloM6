@@ -192,28 +192,31 @@ hitDamage Stats{..} Hit{..} = base * dex * crit * elem * sentry * skill * ctw * 
 -- | Possible models of target placement
 
 data TargetModel
-  = Clumped         -- ^ The dream: Everything standing on a single spot
-  | Radius Distance -- ^ Spread evenly out evenly within a radius
-  | Line   Distance -- ^ Standing in a perfect line of given length
+  = Clumped Count          -- ^ The dream: Everything standing on a single spot
+  | Radius  Count Distance -- ^ Spread evenly out evenly within a radius
+  | Line    Count Distance -- ^ Standing in a perfect line of given length
 
-type Enemies = (Count, TargetModel)
+count :: TargetModel -> Count
+count (Clumped n  ) = n
+count (Radius  n _) = n
+count (Line    n _) = n
 
-singleBoss :: Enemies
-singleBoss = (1, Clumped)
+boss :: TargetModel
+boss = Clumped 1
 
 -- | Calculate how many targets will be hit on average for a given combination
-intersect :: Count -> TargetModel -> HitPattern -> Multiplier
-intersect n _ (HitExact m)  = min n m
-intersect n _ HitEverything = n
+intersect :: HitPattern -> TargetModel -> Multiplier
+intersect (HitExact m)  tm = min (count tm) m
+intersect HitEverything tm = count tm
 
-intersect n Clumped p = case p of
+intersect p (Clumped n) = case p of
   HitRadius _ -> n
   HitLine _ -> n
   HitSplit m -> min n m
   HitRicochet m _ -> min n (1+m)
   HitPath _ -> n
 
-intersect n (Radius d) p = case p of
+intersect p (Radius n d) = case p of
   HitRadius r | (d <= r)  -> n
               -- One target is always hit, some average fraction of the rest
               -- gets hits, based on the area coverage
@@ -225,11 +228,11 @@ intersect n (Radius d) p = case p of
   -- I don't really know how to estimate this in a satisfying way.
   HitSplit _ -> error "Not implemented: HitSplit inside a Radius"
   -- Average number of targets inside ricochet range, up to a cap
-  HitRicochet m r -> 1 + min m (intersect n (Radius d) (HitRadius r))
+  HitRicochet m r -> 1 + min m (intersect (HitRadius r) (Radius n d))
   -- ???
   HitPath _ -> error "Not implemented: HitPath inside a Radius"
 
-intersect n (Line d) p = case p of
+intersect p (Line n d) = case p of
   HitRadius r -> 1 + (2*r)/d * (n-1)
   HitLine _ -> n
   -- For these models, we assume we always hit the enemy at the front.
@@ -257,12 +260,12 @@ computeHits = clipDots . concatMap (traverse skillHits)
                       -- may be warranted. For now, no adjustment needs to be
                       -- made for DoTs clipping.
 
-computeDamage :: Stats -> Enemies -> Timeline Hit -> Timeline Damage
-computeDamage stats (n,tm) = map (fmap simulate)
+computeDamage :: Stats -> TargetModel -> Timeline Hit -> Timeline Damage
+computeDamage stats tm = map (fmap simulate)
   where simulate :: Hit -> Damage
         simulate h =
-            hitDamage stats h               -- Base damage being dealt
-            * intersect n tm (hitPattern h) -- Multiplier due to target types
+            hitDamage stats h             -- Base damage being dealt
+            * intersect (hitPattern h) tm -- Multiplier due to target types
             * case hitType h of
                 -- All of these effects are pretty random, so let's just
                 -- assume only about half of them hit. This probably needs
