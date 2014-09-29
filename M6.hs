@@ -166,7 +166,7 @@ skillHits skill = map ($ skill) $ hits skill
 
 -- | Compute a single skill hit's actual damage
 hitDamage :: Stats -> Hit -> Damage
-hitDamage Stats{..} Hit{..} = base * dex * crit * elem * sentry * skill * ctw * bott * zei's
+hitDamage Stats{..} Hit{..} = base * dex * crit * elite * elem * sentry * skill * ctw * bott * zei's
   where base   = weaponDmg * hitMult * case hitType of
                                          Normal  -> 1
                                          Rocket  -> rocketMul
@@ -174,6 +174,7 @@ hitDamage Stats{..} Hit{..} = base * dex * crit * elem * sentry * skill * ctw * 
         dex    = dexterity
         -- Weighted average of non-crit and crit
         crit   = (1 - critChance) + (critChance * critDamage)
+        elite  = eliteMul
         elem   = petDmg' + case hitElem of
                              Cold      -> coldMul
                              Fire      -> fireMul
