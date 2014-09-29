@@ -1,7 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 module Diablo.M6 where
 
-import Data.Traversable
+import Data.Traversable (traverse)
+import Prelude hiding (repeat)
 
 type Damage     = Double -- ^ Averaged damage
 type Chance     = Double -- ^ Chance (0-1)
@@ -11,6 +12,7 @@ type Targets    = Double -- ^ Average number of targets hit by something
 type Time       = Double -- ^ Seconds
 type Distance   = Double -- ^ Ingame units (yards)
 type Count      = Double -- ^ Averaged count of something (eg. targets)
+type Frames     = Int    -- ^ One unit of ingame 60 FPS time
 
 -- Elements available in the game
 data Element = Cold | Fire | Physical | Lightning | Poison
@@ -252,6 +254,8 @@ intersect p (Line n d) = case p of
 type Timeline a = [(Time, a)]
 
 -- Let's re-invent FRP because dependencies are heavy
+
+-- | Merge two timelines together (left-biased)
 merge :: Timeline a -> Timeline a -> Timeline a
 merge xs [] = xs
 merge [] ys = ys
@@ -259,19 +263,24 @@ merge ls@(l@(t,x):xs) rs@(r@(t',y):ys)
   | t <= t'   = l : merge xs rs
   | otherwise = r : merge ls ys
 
+-- | Offset timestamps in a timeline by a given delay
 delay :: Time -> Timeline a -> Timeline a
 delay d = map $ \(t,a) -> (d+t,a)
 
+-- | Split a timeline into two portions at a given time. Events that fall on
+--   the boundary are included in the left result.
 split :: Time -> Timeline a -> (Timeline a, Timeline a)
-split t = span ((<t).fst)
+split t = span ((<=t).fst)
 
+-- | Sum all events over all the entire timeline
 summarize :: Num a => Timeline a -> a
 summarize = sum . map snd
 
--- Trivial timeline, just shoot elemental arrow 5x per second
-test :: EleRune -> Timeline Skill
-test r = zip [0,0.2..] $ repeat (Elemental r)
+-- | Repeat an event indefinitely at given interval (>0)
+repeat :: Time -> a -> Timeline a
+repeat t e = map (\t -> (t,e)) $ iterate (+t) 0
 
+-- | Compute the total actual hits each skill produces
 computeHits :: Timeline Skill -> Timeline Hit
 computeHits = clipDots . concatMap (traverse skillHits)
   where clipDots = id -- It looks like DoT effects just stack on top of
@@ -279,6 +288,8 @@ computeHits = clipDots . concatMap (traverse skillHits)
                       -- may be warranted. For now, no adjustment needs to be
                       -- made for DoTs clipping.
 
+-- | Compute the actual damage dealt at each hit event, based on stats and
+--   target properties
 computeDamage :: Stats -> TargetModel -> Timeline Hit -> Timeline Damage
 computeDamage stats tm = map (fmap simulate)
   where simulate :: Hit -> Damage
