@@ -328,8 +328,9 @@ type Skills = [(Skill, Frames)]
 
 -- | Rotate through a set of abilities at a given delay to produce a rotation
 rotate :: Frames -> Skills -> Timeline Skill
-rotate d skills = map (\(f,s) -> (fromIntegral f/60, s)) $ go 0 initial
-  where go t ss = let (s,ss') = pick t ss in (t,s) : go (t+d) ss'
+rotate d skills = go 0 initial
+  where go t ss = let (s,ss') = pick t ss
+                  in  (fromIntegral t/60,s) : go (t+d) ss'
         -- Everything is ready initially
         initial = [ (s,cd,0) | (s,cd) <- skills ]
                     -- No ability is ready
