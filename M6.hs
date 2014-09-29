@@ -344,9 +344,9 @@ rotate d skills = go 0 initial
           -- An ability is on cooldown, keep looking
           | otherwise = fmap (a:) $ pick t ss
 
--- Example rotation based on frostfire at 2.84
+-- Example rotation based on frostfire at 4.15
 frostfire :: Skills
-frostfire = [(Cluster M, 144), (Multishot A, 54), (Elemental FA, 0)]
+frostfire = [(Cluster M, 132), (Multishot A, 48), (Elemental FA, 0)]
 
 
 -- | Simulate an actual combat timeline
@@ -360,33 +360,34 @@ simulate stats tm = computeDamage stats tm $ computeHits rotation
 
 stats :: Stats
 stats = Stats
-  { weaponDmg = (1274+2111)/2
-  , dexterity = 1 + 10339/100
-  , critChance = 1
-  , critDamage = 1 + 5.11
-  , coldMul = 1 + 0.15
-  , fireMul = 1
+  { weaponDmg = (1212+2069)/2
+  , dexterity = 1 + 10220/100
+  , critChance = 0.51
+  , critDamage = 1 + 4.64
+  , coldMul = 1 + 0.17
+  , fireMul = 1 + 0.15
   , physicalMul = 1
   , lightningMul = 1
   , poisonMul = 1
-  , petDmg = 0 + 0.2880
-  , eliteMul = 1
+  , petDmg = 0 -- + 0.2880
+  , eliteMul = 1 + 0.30
   , sentryMul = 1 + 0.44
   , rocketMul = 1 + 1.00
   , grenadeMul = 1
-  , skillMul = 1 + 0.20
+  --               SA     WC     MfD    SB     BBV    MC     P
+  , skillMul = 1 + 0.20 + 0.30 + 0.20 + 0.38 + 0.30 + 0.20 + 0.15
   , clusterDmg = 0
   , elementalDmg = 0.29
   , chakDmg = 0
   , multishotDmg = 0
   , impDmg = 0
-  , zei'sMul = 1
+  , zei'sMul = 1 -- + 0.061*5
   , cullMul = 1 + 0.20
-  , trappedMul = 1 + 0.2910
-  , ballTicks = 8
+  , trappedMul = 1 -- + 0.2910
+  , ballTicks = 0
   , sentryCD = 6
   , sentryMax = 4
   , sentrySkills = frostfire
-  , sentrySpeed = 18
+  , sentrySpeed = 12
   , sentryLife = 30
   }
