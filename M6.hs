@@ -262,6 +262,12 @@ merge ls@(l@(t,x):xs) rs@(r@(t',y):ys)
 delay :: Time -> Timeline a -> Timeline a
 delay d = map $ \(t,a) -> (d+t,a)
 
+split :: Time -> Timeline a -> (Timeline a, Timeline a)
+split t = span ((<t).fst)
+
+summarize :: Num a => Timeline a -> a
+summarize = sum . map snd
+
 -- Trivial timeline, just shoot elemental arrow 5x per second
 test :: EleRune -> Timeline Skill
 test r = zip [0,0.2..] $ repeat (Elemental r)
@@ -294,6 +300,12 @@ computeDamage stats tm = map (fmap simulate)
 computeLength :: Damage -> Timeline Damage -> Time
 computeLength hp td = head [ t | (t,d) <- scanl f (0,0) td, d >= hp ]
   where f (_,d) (t,d') = (t,d+d')
+
+-- | Normalize damage by summarizing events within certain timeframes
+normalize :: Time -> Timeline Damage -> Timeline Damage
+normalize d = go 0
+  where go _ [] = []
+        go t td = let (l,r) = split (t+d) td in (t, summarize l) : go (t+d) r
 
 -- Example stats for testing
 
