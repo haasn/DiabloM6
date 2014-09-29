@@ -348,6 +348,12 @@ frostfire :: Skills
 frostfire = [(Cluster M, 144), (Multishot A, 54), (Elemental FA, 0)]
 
 
+-- | Simulate an actual combat timeline
+
+simulate :: Stats -> TargetModel -> Timeline Damage
+simulate stats tm = computeDamage stats tm $ computeHits rotation
+  where rotation = rotate (sentrySpeed stats) (sentrySkills stats)
+
 
 -- Example stats for testing
 
@@ -380,5 +386,6 @@ stats = Stats
   , sentryCD = 6
   , sentryMax = 4
   , sentrySkills = frostfire
-  , sentrySpeed = 12
+  , sentrySpeed = 18
+  , sentryLife = 30
   }
