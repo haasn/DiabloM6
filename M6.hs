@@ -244,14 +244,12 @@ intersect p (Line n d) = case p of
             | otherwise -> 75/d * n
   HitPath _ -> error "Not implemented: HitPath inside a Line"
 
-
--- | Sentry rotations and skill timelines
-
+-- | Timeline of events that happen during combat.
 type Timeline a = [(Time, a)]
 
 -- Trivial timeline, just shoot elemental arrow 5x per second
-test :: Timeline Skill
-test = zip [0,0.2..] $ repeat (Elemental FA)
+test :: EleRune -> Timeline Skill
+test r = zip [0,0.2..] $ repeat (Elemental r)
 
 computeHits :: Timeline Skill -> Timeline Hit
 computeHits = clipDots . concatMap (traverse skillHits)
@@ -277,6 +275,10 @@ computeDamage stats tm = map (fmap simulate)
                 Elemental BL -> ballTicks stats
                 _ -> 1
 
+-- | Compute the combat length needed for a given amount of damage to be dealt
+computeLength :: Damage -> Timeline Damage -> Time
+computeLength hp td = head [ t | (t,d) <- scanl f (0,0) td, d >= hp ]
+  where f (_,d) (t,d') = (t,d+d')
 
 -- Example stats for testing
 
