@@ -222,7 +222,7 @@ intersect HitEverything tm = count tm
 intersect p (Clumped n) = case p of
   HitRadius _ -> n
   HitLine _ -> n
-  HitSplit m -> min n m
+  HitSplit m -> min n (1+m)
   HitRicochet m _ -> min n (1+m)
   HitPath _ -> n
 
@@ -246,7 +246,7 @@ intersect p (Line n d) = case p of
   HitRadius r -> 1 + (2*r)/d * (n-1)
   HitLine _ -> n
   -- For these models, we assume we always hit the enemy at the front.
-  HitSplit m -> min n m
+  HitSplit m -> min n (1+m)
   HitRicochet m r -> 1 + r/d * (n-1)
   -- This works like a line, except it goes a fixed distance and may not hit
   -- anything at all. Confusing ability, though.
