@@ -251,6 +251,17 @@ intersect p (Line n d) = case p of
 -- | Timeline of events that happen during combat.
 type Timeline a = [(Time, a)]
 
+-- Let's re-invent FRP because dependencies are heavy
+merge :: Timeline a -> Timeline a -> Timeline a
+merge xs [] = xs
+merge [] ys = ys
+merge ls@(l@(t,x):xs) rs@(r@(t',y):ys)
+  | t <= t'   = l : merge xs rs
+  | otherwise = r : merge ls ys
+
+delay :: Time -> Timeline a -> Timeline a
+delay d = map $ \(t,a) -> (d+t,a)
+
 -- Trivial timeline, just shoot elemental arrow 5x per second
 test :: EleRune -> Timeline Skill
 test r = zip [0,0.2..] $ repeat (Elemental r)
