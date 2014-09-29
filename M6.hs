@@ -38,6 +38,10 @@ data Stats = Stats
   -- property of targets as well as travel speed, but this is an open problem
   -- for now.
   , ballTicks :: Multiplier
+
+  -- Things related to sentry spawning
+  , sentryCD  :: Time
+  , sentryMax :: Int
   }
   deriving Show
 
@@ -308,4 +312,6 @@ stats = Stats
   , cullMul = 1 + 0.20
   , trappedMul = 1 + 0.2910
   , ballTicks = 8
+  , sentryCD = 6
+  , sentryMax = 4
   }
