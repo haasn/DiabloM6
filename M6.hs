@@ -332,8 +332,7 @@ rotate d skills = map (\(f,s) -> (fromIntegral f/60, s)) $ go 0 initial
   where go t ss = let (s,ss') = pick t ss in (t,s) : go (t+d) ss'
         -- Everything is ready initially
         initial = [ (s,cd,0) | (s,cd) <- skills ]
-
-        -- No ability is ready
+                    -- No ability is ready
         pick t [] = error "Not implemented: Non-spender bolts"
         pick t (a@(s,cd,n):ss)
           -- An ability is ready, use it immediately; increment its cooldown
