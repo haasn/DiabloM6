@@ -33,6 +33,11 @@ data Stats = Stats
 
   -- Not a true multiplier, additive with elements
   , petDmg :: SkillBonus
+
+  -- Multiplier on BL due to tick count. Ideally this should also be a
+  -- property of targets as well as travel speed, but this is an open problem
+  -- for now.
+  , ballTicks :: Multiplier
   }
   deriving Show
 
@@ -107,7 +112,7 @@ skillHits skill = map ($ skill) $ hits skill
 
   hits (Chakram r) = case r of
     TC -> replicate 2 $ Hit 2.20 Fire (HitPath TC) Instant Normal
-    S  -> [ Hit 5.00 Poison    (HitLine 10)    Instant Normal ] -- Estimate
+    S  -> [ Hit 5.00 Poison    (HitLine 10)   Instant Normal ] -- Estimate
     RD -> [ Hit 3.80 Physical  (HitPath RD)   Instant Normal ]
     B  -> [ Hit 4.00 Lightning (HitPath B)    Instant Normal ]
     SC -> [ Hit 2.00 Physical  (HitRadius 10) (DoT 1) Normal ]
@@ -266,10 +271,7 @@ computeDamage stats (n,tm) = map (fmap simulate)
                 Grenade -> 0.5
                 _ -> 1
             * case hitSkill h of
-                -- Ball lightning can tick multiple times for enemies - but
-                -- it really depends on the monster size as well as the travel
-                -- speed of BL bolts, so let's just leave it open for now.
-                Elemental BL -> error "Target count for BL?"
+                Elemental BL -> ballTicks stats
                 _ -> 1
 
 
@@ -277,7 +279,7 @@ computeDamage stats (n,tm) = map (fmap simulate)
 
 stats :: Stats
 stats = Stats
-  { weaponDmg = (1274+2111)/2 / 1000000
+  { weaponDmg = (1274+2111)/2
   , dexterity = 1 + 10339/100
   , critChance = 1
   , critDamage = 1 + 5.11
@@ -300,4 +302,5 @@ stats = Stats
   , zei'sMul = 1
   , cullMul = 1 + 0.20
   , trappedMul = 1 + 0.2910
+  , ballTicks = 8
   }
