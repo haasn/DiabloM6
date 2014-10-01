@@ -231,8 +231,9 @@ intersect p (Radius n d) = case p of
   -- about the exact math for this computational probability problem for
   -- about half an hour before deciding it was probably not worth it.
   HitLine w -> 1 + (2*d*w)/(pi*d*d) * (n-1)
-  -- I don't really know how to estimate this in a satisfying way.
-  HitSplit _ -> error "Not implemented: HitSplit inside a Radius"
+  -- It seems like FA is capable of hitting pretty much everything even in
+  -- most suboptimal conditions, so let's just be generous here
+  HitSplit m -> min n (1+m)
   -- Average number of targets inside ricochet range, up to a cap
   HitRicochet m r -> 1 + min m (intersect (HitRadius r) (Radius n d))
   -- ???
