@@ -187,7 +187,7 @@ hitDamage Stats{..} Hit{..} = base * dex * crit * elite * elem * sentry * skill 
                               Multishot _ -> multishotDmg
                               Cluster   _ -> clusterDmg
                               Impale    _ -> impDmg
-                              Sentry    _ -> 1 -- Sentry damage is already
+                              Sentry    _ -> 0 -- Sentry damage is already
                                                -- included as separate mult
         ctw    = cullMul
         bott   = trappedMul
