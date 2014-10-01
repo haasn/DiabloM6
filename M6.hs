@@ -240,7 +240,8 @@ intersect p (Radius n d) = case p of
   HitPath _ -> error "Not implemented: HitPath inside a Radius"
 
 intersect p (Line n d) = case p of
-  HitRadius r -> 1 + (2*r)/d * (n-1)
+  HitRadius r | (d <= r)  -> n
+              | otherwise -> 1 + (2*r)/d * (n-1)
   HitLine _ -> n
   -- For these models, we assume we always hit the enemy at the front.
   HitSplit m -> min n (1+m)
