@@ -18,7 +18,7 @@ type Frames     = Int    -- ^ One unit of ingame 60 FPS time
 data Element = Cold | Fire | Physical | Lightning | Poison
   deriving (Show, Eq, Ord, Enum)
 
--- | A “snapshot” of gear stats and multipliers
+-- | A “snapshot” of gear stats, multipliers and enabled skills
 data Stats = Stats
   { weaponDmg  :: !Damage
   , dexterity  :: !Multiplier
@@ -42,11 +42,7 @@ data Stats = Stats
   , ballTicks :: !Multiplier
 
   -- Things related to sentries
-  , sentryCD     :: !Time   -- ^ Cooldown on the Sentry ability
-  , sentryMax    :: !Int    -- ^ Maximum number of sentries
-  , sentryLife   :: !Frames -- ^ How many frames the sentry is available for
-  , sentrySpeed  :: !Frames -- ^ Frames per sentry attack animation
-  , sentrySkills :: !Skills -- ^ Sentry's configured skillset
+  , sentryStats :: !SentryStats
   }
   deriving Show
 
@@ -326,15 +322,25 @@ normalize d = go 0
 
 -- Simulation of sentry rotations and cooldowns
 
-type Skills = [(Skill, Frames)]
+type SkillSet = [(Skill, Frames)]
+data SentryStats = SentryStats
+  { sentryRune   :: !SenRune  -- ^ Sentry's active rune
+  , sentrySkills :: !SkillSet -- ^ Sentry's configured skillset
+  , sentryCD     :: !Time     -- ^ Cooldown on the Sentry ability
+  , sentryMax    :: !Int      -- ^ Maximum number of sentries
+  , sentryLife   :: !Frames   -- ^ How many frames the sentry is available for
+  , sentrySpeed  :: !Frames   -- ^ Frames per sentry attack animation
+  } deriving Show
 
--- | Rotate through a set of abilities at a given delay to produce a rotation
-rotate :: Frames -> Skills -> Timeline Skill
-rotate d skills = go 0 initial
+-- | Produce a rotation of sentry abilities
+rotate :: SentryStats -> Timeline Skill
+rotate SentryStats{..} = merge (go 0 initial) chains
   where go f ss = let (s,ss') = pick f ss
-                  in  (fromIntegral f/60,s) : go (f+d) ss'
+                      t       = fromIntegral f/60
+                      rocket  = [(t,Sentry ST) | ST <- [sentryRune]]
+                  in  (t,s) : rocket ++ go (f+sentrySpeed) ss'
         -- Everything is ready initially
-        initial = [ (s,cd,0) | (s,cd) <- skills ]
+        initial = [ (s,cd,0) | (s,cd) <- sentrySkills ]
                     -- No ability is ready
         pick t [] = error "Not implemented: Non-spender bolts"
         pick t (a@(s,cd,n):ss)
@@ -343,9 +349,11 @@ rotate d skills = go 0 initial
           | t >= n = (s, (s,cd,t+cd) : ss)
           -- An ability is on cooldown, keep looking
           | otherwise = fmap (a:) $ pick t ss
+        -- With chains of torment, generate an additional tick per second
+        chains = case sentryRune of CoT -> repeat 1 (Sentry CoT); _ -> []
 
 -- Example rotation based on frostfire at 4.15
-frostfire :: Skills
+frostfire :: SkillSet
 frostfire = [(Cluster M, 132), (Multishot A, 48), (Elemental FA, 0)]
 
 
@@ -353,7 +361,11 @@ frostfire = [(Cluster M, 132), (Multishot A, 48), (Elemental FA, 0)]
 
 simulate :: Stats -> TargetModel -> Timeline Damage
 simulate stats tm = computeDamage stats tm $ computeHits rotation
-  where rotation = rotate (sentrySpeed stats) (sentrySkills stats)
+  where rotation = rotate (sentryStats stats)
+
+-- Compute eDPS over a timeframe
+edps :: Time -> Timeline Damage -> Damage
+edps t td = summarize (takeWhile ((<t).fst) td) / t
 
 
 -- Example stats for testing
@@ -369,25 +381,29 @@ stats = Stats
   , physicalMul = 1
   , lightningMul = 1
   , poisonMul = 1
-  , petDmg = 0 -- + 0.2880
+  , petDmg = 0 + 0.15
   , eliteMul = 1 + 0.30
   , sentryMul = 1 + 0.44
   , rocketMul = 1 + 1.00
   , grenadeMul = 1
   --               SA     WC     MfD    SB     BBV    MC     P
-  , skillMul = 1 + 0.20 + 0.30 + 0.20 + 0.38 + 0.30 + 0.20 + 0.15
+  , skillMul = 1 + 0.20 + 0.30 + 0.20 + 0.20 + 0.30 + 0.20 + 0.15
   , clusterDmg = 0
   , elementalDmg = 0.29
   , chakDmg = 0
   , multishotDmg = 0
   , impDmg = 0
-  , zei'sMul = 1 -- + 0.061*5
+  , zei'sMul = 1 + 0.04*5
   , cullMul = 1 + 0.20
-  , trappedMul = 1 -- + 0.2910
+  , trappedMul = 1 + 0.15
   , ballTicks = 0
-  , sentryCD = 6
-  , sentryMax = 4
-  , sentrySkills = frostfire
-  , sentrySpeed = 12
-  , sentryLife = 30
+  , sentryStats = SentryStats
+    --                  Gem      Shoulders   Paragon
+    { sentryCD = 6 * (1-0.125) * (1-0.06) * (1-0.026)
+    , sentryMax = 4
+    , sentrySkills = frostfire
+    , sentrySpeed = 12
+    , sentryLife = 30
+    , sentryRune = ST
+    }
   }
