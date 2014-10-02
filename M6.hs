@@ -354,6 +354,11 @@ rotate SentryStats{..} = merge (go 0 initial) chains
         -- With chains of torment, generate an additional tick per second
         chains = case sentryRune of CoT -> repeat 1 (Sentry CoT); _ -> []
 
+-- | Produce a rotation for all sentries combined, offset by their cooldowns
+rotateAll :: SentryStats -> Timeline Skill
+rotateAll s@SentryStats{..} = foldr merge [] $ take sentryMax ss
+  where ss = iterate (delay sentryCD) $ rotate s
+
 -- Example rotation based on frostfire at 4.15
 frostfire :: SkillSet
 frostfire = [(Cluster M, 132), (Multishot A, 48), (Elemental FA, 0)]
@@ -363,7 +368,7 @@ frostfire = [(Cluster M, 132), (Multishot A, 48), (Elemental FA, 0)]
 
 simulate :: Stats -> TargetModel -> Timeline Damage
 simulate stats tm = computeDamage stats tm $ computeHits rotation
-  where rotation = rotate (sentryStats stats)
+  where rotation = rotateAll (sentryStats stats)
 
 -- Compute eDPS over a timeframe
 edps :: Time -> Timeline Damage -> Damage
