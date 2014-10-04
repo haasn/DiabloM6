@@ -2,7 +2,7 @@
 module Diablo.M6 where
 
 import Data.Traversable (traverse)
-import Prelude hiding (repeat)
+import Prelude hiding (repeat, elem)
 
 type Damage     = Double -- ^ Averaged damage
 type Chance     = Double -- ^ Chance (0-1)
@@ -245,7 +245,7 @@ intersect p (Line n d) = case p of
   HitLine _ -> n
   -- For these models, we assume we always hit the enemy at the front.
   HitSplit m -> min n (1+m)
-  HitRicochet m r -> 1 + r/d * (n-1)
+  HitRicochet m r -> 1 + r/d * min m (n-1)
   -- This works like a line, except it goes a fixed distance and may not hit
   -- anything at all. Confusing ability, though.
   HitPath B | (d <= 75) -> n
@@ -261,9 +261,9 @@ type Timeline a = [(Time, a)]
 merge :: Timeline a -> Timeline a -> Timeline a
 merge xs [] = xs
 merge [] ys = ys
-merge ls@(l@(t,x):xs) rs@(r@(t',y):ys)
-  | t <= t'   = l : merge xs rs
-  | otherwise = r : merge ls ys
+merge ls@(x@(t,_):xs) rs@(y@(t',_):ys)
+  | t <= t'   = x : merge xs rs
+  | otherwise = y : merge ls ys
 
 -- | Offset timestamps in a timeline by a given delay
 delay :: Time -> Timeline a -> Timeline a
@@ -280,7 +280,7 @@ summarize = sum . map snd
 
 -- | Repeat an event indefinitely at given interval (>0)
 repeat :: Time -> a -> Timeline a
-repeat t e = map (\t -> (t,e)) $ iterate (+t) 0
+repeat d e = map (\t -> (t,e)) $ iterate (+d) 0
 
 -- | Compute the total actual hits each skill produces
 computeHits :: Timeline Skill -> Timeline Hit
@@ -293,21 +293,21 @@ computeHits = clipDots . concatMap (traverse skillHits)
 -- | Compute the actual damage dealt at each hit event, based on stats and
 --   target properties
 computeDamage :: Stats -> TargetModel -> Timeline Hit -> Timeline Damage
-computeDamage stats tm = map (fmap simulate)
-  where simulate :: Hit -> Damage
-        simulate h =
-            hitDamage stats h             -- Base damage being dealt
-            * intersect (hitPattern h) tm -- Multiplier due to target types
-            * case hitType h of
-                -- All of these effects are pretty random, so let's just
-                -- assume only about half of them hit. This probably needs
-                -- to be tuned more properly, but a quick test of LfB suggests
-                -- that only about 2 grenades ever hit their intended target.
-                Grenade -> 0.5
-                _ -> 1
-            * case hitSkill h of
-                Elemental BL -> ballTicks stats
-                _ -> 1
+computeDamage stats tm = map (fmap sim)
+  where sim :: Hit -> Damage
+        sim h = hitDamage stats h             -- Base damage being dealt
+                * intersect (hitPattern h) tm -- Multiplier due to target types
+                * case hitType h of
+                    -- All of these effects are pretty random, so let's just
+                    -- assume only about half of them hit. This probably needs
+                    -- to be tuned more properly, but a quick test of LfB
+                    -- suggests that only about 2 grenades ever hit their
+                    -- intended target.
+                    Grenade -> 0.5
+                    _ -> 1
+                * case hitSkill h of
+                    Elemental BL -> ballTicks stats
+                    _ -> 1
 
 -- | Compute the combat length needed for a given amount of damage to be dealt
 computeLength :: Damage -> Timeline Damage -> Time
@@ -344,7 +344,7 @@ rotate SentryStats{..} = merge (go 0 initial) chains
         -- Everything is ready initially
         initial = [ (s,cd,0) | (s,cd) <- sentrySkills ]
                     -- No ability is ready
-        pick t [] = error "Not implemented: Non-spender bolts"
+        pick _ [] = error "Not implemented: Non-spender bolts"
         pick t (a@(s,cd,n):ss)
           -- An ability is ready, use it immediately; increment its cooldown
           -- time and leave other abilities unchanged
@@ -377,8 +377,8 @@ edps t td = summarize (takeWhile ((<t).fst) td) / t
 
 -- Example stats for testing
 
-stats :: Stats
-stats = Stats
+exampleStats :: Stats
+exampleStats = Stats
   { weaponDmg = (1212+2069)/2
   , dexterity = 1 + 10220/100
   , critChance = 0.51
