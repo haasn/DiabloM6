@@ -370,9 +370,12 @@ rotateAll :: SentryStats -> Timeline Skill
 rotateAll s@SentryStats{..} = foldr merge [] $ take sentryMax ss
   where ss = iterate (delay sentryCD) $ rotate s
 
--- Example rotation based on frostfire at 4.15
+-- Example rotations based on 4.15
 frostfire :: SkillSet
 frostfire = [(Cluster M, 132), (Multishot A, 48), (Elemental FA, 0)]
+
+slowball :: SkillSet
+slowball = [(Elemental BL, 0)]
 
 
 -- | Simulate an actual combat timeline
