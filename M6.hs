@@ -281,9 +281,9 @@ delay :: Time -> Timeline a -> Timeline a
 delay d = map $ \(t,a) -> (d+t,a)
 
 -- | Split a timeline into two portions at a given time. Events that fall on
---   the boundary are included in the left result.
+--   the boundary are included in the right result.
 split :: Time -> Timeline a -> (Timeline a, Timeline a)
-split t = span ((<=t).fst)
+split t = span ((<t).fst)
 
 -- | Sum all events over all the entire timeline
 summarize :: Num a => Timeline a -> a
