@@ -31,7 +31,7 @@ data Stats = Stats
   , zei'sMul, trappedMul, cullMul :: !Multiplier
 
   -- Additive extra skill bonuses
-  , elementalDmg, chakDmg, multishotDmg, clusterDmg, impDmg :: !SkillBonus
+  , elementalDmg, chakDmg, multishotDmg, clusterDmg, impDmg, compDmg :: !SkillBonus
 
   -- Not a true multiplier, additive with elements
   , petDmg :: !SkillBonus
@@ -41,7 +41,7 @@ data Stats = Stats
   -- for now.
   , ballTicks :: !Multiplier
 
-  -- Things related to sentries
+  -- Things related to sentries and players
   , sentryStats :: !SentryStats
   }
   deriving Show
@@ -57,6 +57,7 @@ data Skill
   | Cluster ClustRune
   | Impale ImpRune
   | Sentry SenRune
+  | Companion ComRune
   deriving (Show, Eq)
 
 data EleRune   = BL  | FA  | IA  | LB | NT  deriving (Show, Eq, Ord, Enum)
@@ -65,6 +66,7 @@ data MultiRune = FaW | BF  | SF  | FB | A   deriving (Show, Eq, Ord, Enum)
 data ClustRune = DA  | SS  | M   | CB | LfB deriving (Show, Eq, Ord, Enum)
 data ImpRune   = I   | ChB | O   | R  | GW  deriving (Show, Eq, Ord, Enum)
 data SenRune   = ST  | IB  | CoT | PS | GT  deriving (Show, Eq, Ord, Enum)
+data ComRune   = SpC | BaC | BoC | FC | WC  deriving (Show, Eq, Ord, Enum)
 
 -- Encapsulated data for a type of skill hit effect
 data Hit = Hit
@@ -158,6 +160,14 @@ skillHits skill = map ($ skill) $ hits skill
     CoT -> [ Hit 3.00 Physical HitEverything (DoT 1) Normal ]
     _   -> []
 
+  -- Extra damage from companion hits
+  hits (Companion r) =
+    let single = [ simple 1.00 Physical ]
+        -- What is the true range on these?
+        aoe    = [ Hit 1.00 Physical (HitRadius 3) Instant Normal ]
+    in case r of
+         BaC -> single; BoC -> single; FC -> single ++ single
+         SpC -> aoe; WC -> aoe
 
 
 -- | Compute a single skill hit's actual damage
@@ -180,13 +190,14 @@ hitDamage Stats{..} Hit{..} = base * dex * crit * elite * elem * sentry * skill 
           -- Enforcer damage doesn't apply to Spitfire Turret's rockets,
           -- possible bug in Blizzard's implementation.
           where petDmg' = case hitSkill of Sentry ST -> 0; _ -> petDmg
-        sentry = sentryMul
+        sentry = case hitSkill of Companion _ -> 1; _ -> sentryMul
         skill  = skillMul + case hitSkill of
                               Elemental _ -> elementalDmg
                               Chakram   _ -> chakDmg
                               Multishot _ -> multishotDmg
                               Cluster   _ -> clusterDmg
                               Impale    _ -> impDmg
+                              Companion _ -> compDmg
                               Sentry    _ -> 0 -- Sentry damage is already
                                                -- included as separate mult
         ctw    = cullMul
@@ -372,45 +383,46 @@ simulate stats tm = computeDamage stats tm $ computeHits rotation
 
 -- Compute eDPS over a timeframe
 edps :: Time -> Timeline Damage -> Damage
-edps t td = summarize (takeWhile ((<t).fst) td) / t
+edps t td = summarize (fst $ split t td) / t
 
 
 -- Example stats for testing
 
 exampleStats :: Stats
 exampleStats = Stats
-  { weaponDmg = (1212+2069)/2
-  , dexterity = 1 + 10220/100
-  , critChance = 0.51
-  , critDamage = 1 + 4.64
-  , coldMul = 1 + 0.17
-  , fireMul = 1 + 0.15
+  { weaponDmg = 1
+  , dexterity = 1 + 10000/100
+  , critChance = 0.5
+  , critDamage = 1 + 5
+  , coldMul = 1 + 0.40
+  , fireMul = 1
   , physicalMul = 1
   , lightningMul = 1
   , poisonMul = 1
-  , petDmg = 0 + 0.15
+  , petDmg = 0 + 0.30
   , eliteMul = 1 + 0.30
-  , sentryMul = 1 + 0.44
+  , sentryMul = 1 + 0.45
   , rocketMul = 1 + 1.00
   , grenadeMul = 1
-  --               SA     WC     MfD    SB     BBV    MC     P
-  , skillMul = 1 + 0.20 + 0.30 + 0.20 + 0.20 + 0.30 + 0.20 + 0.15
+  --               SA     WC     MfD    SB     BBV    MC     P      GoET
+  , skillMul = 1 + 0.00 + 0.30 + 0.20 + 0.30 + 0.30 + 0.20 + 0.15 + 0.10
   , clusterDmg = 0
-  , elementalDmg = 0.29
+  , elementalDmg = 0.30
   , chakDmg = 0
   , multishotDmg = 0
   , impDmg = 0
-  , zei'sMul = 1 + 0.04*5
+  , compDmg = 0
+  , zei'sMul = 1 + 0.30
   , cullMul = 1 + 0.20
-  , trappedMul = 1 + 0.15
-  , ballTicks = 0
+  , trappedMul = 1 + 0.30
+  , ballTicks = 7
   , sentryStats = SentryStats
-    --                  Gem      Shoulders   Paragon
-    { sentryCD = 6 * (1-0.125) * (1-0.06) * (1-0.026)
-    , sentryMax = 4
+    --                  Gem      Shoulders  Paragon    Quiver
+    { sentryCD = 6 * (1-0.125) * (1-0.08) * (1-0.1) * (1-0.08)
+    , sentryMax = 5
     , sentrySkills = frostfire
     , sentrySpeed = 12
-    , sentryLife = 30
+    , sentryLife = 60
     , sentryRune = ST
     }
   }
