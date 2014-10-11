@@ -110,7 +110,7 @@ skillHits :: Skill -> [Hit]
 skillHits skill = map ($ skill) $ hits skill
  where
   hits (Elemental r) = case r of
-    BL -> [ Hit 3.00 Lightning (HitLine  10) Instant Normal ]
+    BL -> [ Hit 1.50 Lightning (HitLine  10) Instant Normal ] -- Per tick!
     FA -> [ Hit 3.30 Cold      (HitSplit 10) Instant Normal ]
     IA -> [ simple 3.00 Fire, Hit 3.15 Fire (HitRadius 10) (DoT 2) Normal ]
     LB -> [ simple 3.00 Lightning ]
