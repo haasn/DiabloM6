@@ -417,14 +417,98 @@ exampleStats = Stats
   , zei'sMul = 1 + 0.30
   , cullMul = 1 + 0.20
   , trappedMul = 1 + 0.30
-  , ballTicks = 7
+  , ballTicks = 8
+  , sentryStats = SentryStats
+    --                  Gem      Shoulders  Paragon    Quiver
+    { sentryCD = 6 * (1-0.125) * (1-0.08) * (1-0.1) * (1-0.08)
+    , sentryMax = 1
+    , sentrySkills = slowball
+    , sentrySpeed = 12
+    , sentryLife = 60
+    , sentryRune = PS
+    }
+  }
+
+baseline :: Stats
+baseline = Stats
+  { weaponDmg = 0
+  , dexterity = 1 + 9617/100
+  , critChance = 0.58
+  , critDamage = 1 + 4.8
+  , coldMul = 1
+  , fireMul = 1 + 0.6
+  , physicalMul = 1
+  , lightningMul = 1
+  , poisonMul = 1
+  , petDmg = 0 + 0.30
+  , eliteMul = 1 + 0.30
+  , sentryMul = 1 + 0.45
+  , rocketMul = 1 + 1.00
+  , grenadeMul = 1
+  --               SA
+  , skillMul = 1 + 0.00 + 2.50
+  , clusterDmg = 0
+  , elementalDmg = 0.30
+  , chakDmg = 0
+  , multishotDmg = 0
+  , impDmg = 0
+  , compDmg = 0
+  , zei'sMul = 1 + 0.30
+  , cullMul = 1 + 0.20
+  , trappedMul = 1 + 0.30
+  , ballTicks = 8
   , sentryStats = SentryStats
     --                  Gem      Shoulders  Paragon    Quiver
     { sentryCD = 6 * (1-0.125) * (1-0.08) * (1-0.1) * (1-0.08)
     , sentryMax = 5
-    , sentrySkills = frostfire
+    , sentrySkills = fullfire
     , sentrySpeed = 12
     , sentryLife = 60
     , sentryRune = ST
+    }
+  }
+
+-- Helltrapper baseline (with Archery)
+helltrapper = baseline
+  { weaponDmg = 1756.5
+  , critChance = critChance baseline + 0.05
+  , sentryStats = (sentryStats baseline) { sentryMax = 7, sentryCD = 4*2/3 }
+  }
+
+-- Setup 1: Steady Aim
+hell1 = helltrapper { skillMul = skillMul helltrapper + 0.20 }
+
+-- Setup 2: Single Out (CHD/CHD rings)
+hell2 = helltrapper
+  { critChance = critChance helltrapper - 0.06 + 0.25
+  , critDamage = critDamage helltrapper + 0.50
+  }
+
+-- Setup 3: Grenadier
+hell3 = helltrapper { grenadeMul = 2 }
+
+-- Setup 4: Grenadier + Ambush
+hell4 = hell3 { critChance = critChance baseline }
+
+-- Kridershot + Grenadier
+kridershot = baseline
+  { weaponDmg = 2005.75
+  , critChance = critChance baseline - 0.06 -- ring -> IAS
+  , skillMul = skillMul baseline
+  , grenadeMul = 2
+  }
+
+kriderself :: TargetModel -> Timeline Damage
+kriderself tm = computeDamage self tm . computeHits . repeat (1/2.7713) $ Elemental IA
+  where self = kridershot { sentryMul = 1, petDmg = 0 }
+
+-- Buriza + Archery + Grenadier
+buriza = baseline
+  { weaponDmg = 2556.75
+  , critDamage = critDamage baseline + 0.50
+  , grenadeMul = 2
+  , sentryStats = (sentryStats baseline)
+    { sentrySkills = [(Cluster LfB, 144), (Multishot A, 54), (Elemental IA, 0)]
+    , sentrySpeed = 18
     }
   }
