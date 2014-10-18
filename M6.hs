@@ -485,7 +485,7 @@ hell2 = helltrapper
   }
 
 -- Setup 3: Grenadier
-hell3 = helltrapper { grenadeMul = 2 }
+hell3 = helltrapper { grenadeMul = 1.1 }
 
 -- Setup 4: Grenadier + Ambush
 hell4 = hell3 { critChance = critChance baseline }
@@ -495,7 +495,7 @@ kridershot = baseline
   { weaponDmg = 2005.75
   , critChance = critChance baseline - 0.06 -- ring -> IAS
   , skillMul = skillMul baseline
-  , grenadeMul = 2
+  , grenadeMul = 1.1
   }
 
 kriderself :: TargetModel -> Timeline Damage
@@ -506,7 +506,7 @@ kriderself tm = computeDamage self tm . computeHits . repeat (1/2.7713) $ Elemen
 buriza = baseline
   { weaponDmg = 2556.75
   , critDamage = critDamage baseline + 0.50
-  , grenadeMul = 2
+  , grenadeMul = 1.1
   , sentryStats = (sentryStats baseline)
     { sentrySkills = [(Cluster LfB, 144), (Multishot A, 54), (Elemental IA, 0)]
     , sentrySpeed = 18
