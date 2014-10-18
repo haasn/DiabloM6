@@ -323,6 +323,10 @@ normalize d = go 0
   where go _ [] = []
         go t td = let (l,r) = split (t+d) td in (t, summarize l) : go (t+d) r
 
+-- | Effective HP multiplier due to Ambush
+ambushMul :: Multiplier
+ambushMul = 1 - (1-1/1.4) * 0.25
+
 
 
 -- Simulation of sentry rotations and cooldowns
