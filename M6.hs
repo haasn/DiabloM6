@@ -488,11 +488,11 @@ hell3 = hell1
   }
 
 
--- Bows
+-- Bows + Steady Aim
 bows = baseline
   { weaponDmg = 2005.75
   , critChance = critChance baseline - 0.06 -- ring -> IAS
-  , skillMul = skillMul baseline
+  , skillMul = skillMul baseline + 0.20
   }
 
 -- Estimation of Kridershot self-shooting. Note: Kridershot is ruled out any
