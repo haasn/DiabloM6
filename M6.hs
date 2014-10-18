@@ -500,7 +500,7 @@ bows = baseline
 -- I wrote this function.
 kriderself :: TargetModel -> Timeline Damage
 kriderself tm = computeDamage self tm . computeHits . repeat (1/2.7713) $ Elemental IA
-  where self = kridershot { sentryMul = 1, petDmg = 0 }
+  where self = bows { sentryMul = 1, petDmg = 0 }
 
 -- Buriza + Archery
 buriza = baseline
