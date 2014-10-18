@@ -468,27 +468,25 @@ baseline = Stats
     }
   }
 
--- Helltrapper baseline (with Archery)
-helltrapper = baseline
+-- Setup 1: Archery
+hell1 = baseline
   { weaponDmg = 1756.5
   , critChance = critChance baseline + 0.05
   , sentryStats = (sentryStats baseline) { sentryMax = 7, sentryCD = 4*2/3 }
   }
 
--- Setup 1: Steady Aim
-hell1 = helltrapper { skillMul = skillMul helltrapper + 0.20 }
-
--- Setup 2: Single Out (CHD/CHD rings)
-hell2 = helltrapper
-  { critChance = critChance helltrapper - 0.06 + 0.25
-  , critDamage = critDamage helltrapper + 0.50
+-- Setup 2: Steady Aim
+hell2 = hell1
+  { critChance = critChance baseline
+  , skillMul = skillMul baseline + 0.20
   }
 
--- Setup 3: Grenadier
-hell3 = helltrapper { grenadeMul = 1.1 }
+-- Setup 3: Single Out (CHD/CHD rings)
+hell3 = hell1
+  { critChance = critChance baseline - 0.06 + 0.25
+  , critDamage = critDamage baseline + 0.50
+  }
 
--- Setup 4: Grenadier + Ambush
-hell4 = hell3 { critChance = critChance baseline }
 
 -- Kridershot + Grenadier
 kridershot = baseline
