@@ -23,7 +23,7 @@ data Stats = Stats
   { weaponDmg  :: !Damage
   , dexterity  :: !Multiplier
   , critChance :: !Chance
-  , critDamage :: !Multiplier
+  , critDamage :: !Damage
 
   -- True skill multipliers
   , coldMul, fireMul, physicalMul, lightningMul, poisonMul :: !Multiplier
@@ -179,7 +179,7 @@ hitDamage Stats{..} Hit{..} = base * dex * crit * elite * elem * sentry * skill 
                                          Grenade -> grenadeMul
         dex    = dexterity
         -- Weighted average of non-crit and crit
-        crit   = (1 - critChance) + (critChance * critDamage)
+        crit   = 1 + critChance * critDamage
         elite  = eliteMul
         elem   = petDmg' + case hitElem of
                              Cold      -> coldMul
@@ -395,7 +395,7 @@ exampleStats = Stats
   { weaponDmg = 1
   , dexterity = 1 + 10000/100
   , critChance = 0.5
-  , critDamage = 1 + 5
+  , critDamage = 5.00
   , coldMul = 1 + 0.40
   , fireMul = 1
   , physicalMul = 1
@@ -434,7 +434,7 @@ baseline = Stats
   { weaponDmg = 0
   , dexterity = 1 + 9617/100
   , critChance = 0.58
-  , critDamage = 1 + 4.8
+  , critDamage = 4.80
   , coldMul = 1
   , fireMul = 1 + 0.6
   , physicalMul = 1
