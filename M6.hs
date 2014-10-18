@@ -373,6 +373,9 @@ frostfire = [(Cluster M, 132), (Multishot A, 48), (Elemental FA, 0)]
 slowball :: SkillSet
 slowball = [(Elemental BL, 0)]
 
+fullfire :: SkillSet
+fullfire = [(Cluster LfB, 132), (Multishot A, 48), (Elemental IA, 0)]
+
 
 -- | Simulate an actual combat timeline
 
