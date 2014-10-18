@@ -308,14 +308,6 @@ computeDamage stats tm = map (fmap sim)
   where sim :: Hit -> Damage
         sim h = hitDamage stats h             -- Base damage being dealt
                 * intersect (hitPattern h) tm -- Multiplier due to target types
-                * case hitType h of
-                    -- All of these effects are pretty random, so let's just
-                    -- assume only about half of them hit. This probably needs
-                    -- to be tuned more properly, but a quick test of LfB
-                    -- suggests that only about 2 grenades ever hit their
-                    -- intended target.
-                    Grenade -> 0.5
-                    _ -> 1
                 * case hitSkill h of
                     Elemental BL -> ballTicks stats
                     _ -> 1
