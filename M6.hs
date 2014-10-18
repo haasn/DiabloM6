@@ -488,23 +488,24 @@ hell3 = hell1
   }
 
 
--- Kridershot + Grenadier
-kridershot = baseline
+-- Bows
+bows = baseline
   { weaponDmg = 2005.75
   , critChance = critChance baseline - 0.06 -- ring -> IAS
   , skillMul = skillMul baseline
-  , grenadeMul = 1.1
   }
 
+-- Estimation of Kridershot self-shooting. Note: Kridershot is ruled out any
+-- way due to lack of a fourth primary, but I did not realize that at the time
+-- I wrote this function.
 kriderself :: TargetModel -> Timeline Damage
 kriderself tm = computeDamage self tm . computeHits . repeat (1/2.7713) $ Elemental IA
   where self = kridershot { sentryMul = 1, petDmg = 0 }
 
--- Buriza + Archery + Grenadier
+-- Buriza + Archery
 buriza = baseline
   { weaponDmg = 2556.75
   , critDamage = critDamage baseline + 0.50
-  , grenadeMul = 1.1
   , sentryStats = (sentryStats baseline)
     { sentrySkills = [(Cluster LfB, 144), (Multishot A, 54), (Elemental IA, 0)]
     , sentrySpeed = 18
