@@ -433,8 +433,8 @@ baseline :: Stats
 baseline = Stats
   { weaponDmg = 0
   , dexterity = 1 + 9617/100
-  , critChance = 0.58
-  , critDamage = 4.80
+  , critChance = 0.62
+  , critDamage = 5.30
   , coldMul = 1
   , fireMul = 1 + 0.6
   , physicalMul = 1
@@ -446,7 +446,7 @@ baseline = Stats
   , rocketMul = 1 + 1.00
   , grenadeMul = 1
   --               SA
-  , skillMul = 1 + 0.00 + 2.50
+  , skillMul = 1 + 0.00 + 2.15
   , clusterDmg = 0
   , elementalDmg = 0.30
   , chakDmg = 0
@@ -468,24 +468,19 @@ baseline = Stats
     }
   }
 
--- Setup 1: Archery
-hell1 = baseline
+helltrapper = baseline
   { weaponDmg = 1756.5
-  , critChance = critChance baseline + 0.05
   , sentryStats = (sentryStats baseline) { sentryMax = 7, sentryCD = 4*2/3 }
   }
 
--- Setup 2: Steady Aim
-hell2 = hell1
-  { critChance = critChance baseline
-  , skillMul = skillMul baseline + 0.20
-  }
+-- Setup 1: Archery
+hell1 = helltrapper { critChance = critChance helltrapper + 0.05 }
 
--- Setup 3: Single Out (CHD/CHD rings)
-hell3 = hell1
-  { critChance = critChance baseline - 0.06 + 0.25
-  , critDamage = critDamage baseline + 0.50
-  }
+-- Setup 2: Steady Aim
+hell2 = helltrapper { skillMul = skillMul helltrapper + 0.20 }
+
+-- Setup 3: Single Out
+hell3 = helltrapper { critChance = critChance baseline + 0.25 }
 
 
 -- Bows + Steady Aim
