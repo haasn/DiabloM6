@@ -76,7 +76,7 @@ data Hit = Hit
   , hitLength  :: !HitLength
   , hitType    :: !HitType
   , hitSkill   :: !Skill
-  }
+  } deriving Show
 
 -- | Types of hit patterns
 data HitPattern
@@ -422,7 +422,7 @@ exampleStats = Stats
     --                  Gem      Shoulders  Paragon    Quiver
     { sentryCD = 6 * (1-0.125) * (1-0.08) * (1-0.1) * (1-0.08)
     , sentryMax = 1
-    , sentrySkills = slowball
+    , sentrySkills = frostfire
     , sentrySpeed = 12
     , sentryLife = 60
     , sentryRune = PS
