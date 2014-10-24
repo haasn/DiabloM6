@@ -139,7 +139,7 @@ skillHits skill = map ($ skill) $ hits skill
            , Hit 6.00 Physical  (HitExact 3)   Instant Rocket ]
     M   -> [ Hit 5.50 Cold      (HitRadius 10) Instant Normal
            , Hit 4.50 Cold      (HitExact 5)   Instant Rocket ]
-    CB  -> [ Hit 5.25 Fire      (HitRadius 10) Instant Normal
+    CB  -> [ Hit 5.25 Fire      (HitRadius 10) Instant Normal    -- Grenade?
            , Hit 5.25 Fire      (HitLine 6)    Instant Grenade ]
     LfB ->   Hit 7.70 Fire      (HitRadius 10) Instant Normal : grenades Fire
     where grenades e = replicate 4 $ Hit 2.20 e (HitRadius 6) Instant Grenade
