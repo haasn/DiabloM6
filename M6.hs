@@ -441,12 +441,12 @@ baseline = Stats
   , lightningMul = 1
   , poisonMul = 1
   , petDmg = 0 + 0.30
-  , eliteMul = 1 + 0.40
+  , eliteMul = 1 + 0.50
   , sentryMul = 1 + 0.45
   , rocketMul = 1 + 1.00
   , grenadeMul = 1
   --               SA
-  , skillMul = 1 + 0.00 + 2.15
+  , skillMul = 1 + 0.00 + 2.075
   , clusterDmg = 0
   , elementalDmg = 0.30
   , chakDmg = 0
@@ -458,8 +458,8 @@ baseline = Stats
   , trappedMul = 1 + 0.30
   , ballTicks = 8
   , sentryStats = SentryStats
-    --                  Gem      Shoulders  Paragon    Quiver
-    { sentryCD = 6 * (1-0.125) * (1-0.08) * (1-0.1) * (1-0.08)
+    --                  Gem      Shoulders  Paragon
+    { sentryCD = 6 * (1-0.125) * (1-0.08) * (1-0.1)
     , sentryMax = 5
     , sentrySkills = fullfire
     , sentrySpeed = 12
