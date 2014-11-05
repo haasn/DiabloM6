@@ -446,7 +446,7 @@ baseline = Stats
   , rocketMul = 1 + 1.00
   , grenadeMul = 1
   --               SA
-  , skillMul = 1 + 0.00 + 2.075
+  , skillMul = 1 + 0.00 + 2.126
   , clusterDmg = 0
   , elementalDmg = 0.30
   , chakDmg = 0
